@@ -1,0 +1,21 @@
+[gd_scene format=3 uid="uid://wkcam2kuolhf"]
+
+[ext_resource type="Script" uid="uid://dqj7yeah8iol6" path="res://player.gd" id="1_4flbx"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_sh265"]
+size = Vector2(20, 30)
+
+[sub_resource type="BoxMesh" id="BoxMesh_4flbx"]
+size = Vector3(20, 30, 1)
+
+[node name="Player" type="CharacterBody2D" unique_id=1946686918]
+slide_on_ceiling = false
+floor_stop_on_slope = false
+script = ExtResource("1_4flbx")
+
+[node name="Collision" type="CollisionShape2D" parent="." unique_id=952220066]
+shape = SubResource("RectangleShape2D_sh265")
+
+[node name="Sprite" type="MeshInstance2D" parent="." unique_id=876980817]
+modulate = Color(0.3660824, 0.5703481, 0.9630285, 1)
+mesh = SubResource("BoxMesh_4flbx")

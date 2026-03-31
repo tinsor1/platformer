@@ -1,0 +1,29 @@
+[gd_scene format=3 uid="uid://cj66lfypp2361"]
+
+[ext_resource type="PackedScene" uid="uid://wkcam2kuolhf" path="res://player.tscn" id="1_37kl0"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_37kl0"]
+size = Vector2(325, 20)
+
+[sub_resource type="BoxMesh" id="BoxMesh_8uh7m"]
+size = Vector3(325, 20, 1)
+
+[node name="Scene" type="Node" unique_id=1856831117]
+
+[node name="Player" parent="." unique_id=1946686918 instance=ExtResource("1_37kl0")]
+
+[node name="Level" type="Node2D" parent="." unique_id=1835339382]
+
+[node name="StaticBody2D" type="StaticBody2D" parent="Level" unique_id=1989784436]
+position = Vector2(0, 40)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Level/StaticBody2D" unique_id=723026924]
+shape = SubResource("RectangleShape2D_37kl0")
+
+[node name="MeshInstance2D" type="MeshInstance2D" parent="Level/StaticBody2D" unique_id=1426102673]
+modulate = Color(0, 0, 0, 1)
+mesh = SubResource("BoxMesh_8uh7m")
+
+[node name="Camera" type="Camera2D" parent="." unique_id=374858435]
+ignore_rotation = false
+zoom = Vector2(8, 8)
