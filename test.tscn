@@ -14,7 +14,7 @@ size = Vector3(325, 20, 1)
 
 [node name="Level" type="Node2D" parent="." unique_id=1835339382]
 
-[node name="StaticBody2D" type="StaticBody2D" parent="Level" unique_id=1989784436]
+[node name="StaticBody2D" type="StaticBody2D" parent="Level" unique_id=1989784436 groups=["Level"]]
 position = Vector2(0, 40)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Level/StaticBody2D" unique_id=723026924]

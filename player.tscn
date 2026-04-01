@@ -5,8 +5,15 @@
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_sh265"]
 size = Vector2(20, 30)
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_4flbx"]
+albedo_color = Color(0.19215687, 0.5764706, 1, 1)
+
 [sub_resource type="BoxMesh" id="BoxMesh_4flbx"]
+material = SubResource("StandardMaterial3D_4flbx")
 size = Vector3(20, 30, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_onrkg"]
+size = Vector3(15, 4, 1)
 
 [node name="Player" type="CharacterBody2D" unique_id=1946686918]
 slide_on_ceiling = false
@@ -17,5 +24,10 @@ script = ExtResource("1_4flbx")
 shape = SubResource("RectangleShape2D_sh265")
 
 [node name="Sprite" type="MeshInstance2D" parent="." unique_id=876980817]
-modulate = Color(0.3660824, 0.5703481, 0.9630285, 1)
+modulate = Color(0, 0.49019608, 1, 1)
+z_index = 1
 mesh = SubResource("BoxMesh_4flbx")
+
+[node name="Gun" type="MeshInstance2D" parent="." unique_id=1986856903]
+modulate = Color(0, 0, 0, 1)
+mesh = SubResource("BoxMesh_onrkg")

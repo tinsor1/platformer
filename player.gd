@@ -11,38 +11,45 @@ extends CharacterBody2D
 
 @export_category("Dashing")
 var available_dashes: int = 3
-@export var dash_speed: float = 250.0
 @export var dash_dist: float = 100.0
 var can_redash: bool = false
-@export var redash_window_length: float = 0.25
+@export var redash_window_length: float = 0.5
 var redash_timer: float = 1.0
 var dash_on_cooldown: bool = false
 @export var dash_cooldown: float = 1.0
 var dash_cooldown_timer: float = 1.0
 
 @export_category("Aiming")
+var locked: bool = false
 var prev_aim_dir: Vector2 = Vector2.ZERO
 var aim_dir: Vector2 = Vector2.RIGHT
+@export var gun_rot_speed: float = 10.0
+@export var gun_hold_dist: Vector2 = Vector2(20, 30)
+@onready var gun: MeshInstance2D = $Gun
+var gun_offset: Vector2 = Vector2.ZERO
+
+# camera
+@onready var camera: Camera2D = get_parent().get_node("Camera")
+var cam_offset: Vector2 = Vector2.ZERO
+var cam_offset_multiplier: Vector2 = Vector2(0.3, 0.3)
+var cam_follow_speed: float = 6.0
 
 func _physics_process(delta: float):
 	if !is_on_floor():
 		velocity += get_gravity() * delta
 	
 	gather_inputs()
+	move_cam(delta)
 	
+	# redash window
 	if can_redash:
-		redash_timer -= delta
-		if redash_timer <= 0:
-			end_dash()
-		velocity = Vector2.ZERO
+		redash_window(delta)
+	elif locked:
+		free_aim()
 	else:
-		if dash_on_cooldown:
-			dash_cooldown_timer -= delta
-			if dash_cooldown_timer <= 0:
-				dash_on_cooldown = false
-				available_dashes = 3
-		movement(delta)
+		normal_movement(delta)
 		
+	move_gun(delta)
 	move_and_slide()
 
 func gather_inputs():
@@ -53,38 +60,58 @@ func gather_inputs():
 		jump()
 	# cut jump short if key released early
 	if velocity.y < 0 && !is_on_floor() && Input.is_action_just_released("Jump"):
-		velocity.y = 0
+		velocity.y /= 2
 	# aiming
 	aim_dir = Vector2(
 		Input.get_axis("Move Left", "Move Right"),
 		Input.get_axis("Look Up", "Look Down")
 	).normalized()
-	
-	aim()
+	# free aim
+	if Input.is_action_just_pressed("Aim"):
+		locked = true
+	if Input.is_action_just_released("Aim"):
+		locked = false
+		gun_offset = Vector2.ZERO
+	# dashing
+	if Input.is_action_just_pressed("Dash") && !dash_on_cooldown:
+		start_dash()
 
-func aim():
-	var new_aim_dir = Vector2(
-		Input.get_axis("Move Left", "Move Right"),
-		Input.get_axis("Look Up", "Look Down")
-	).normalized()
-	
-	if Input.is_action_just_pressed("Dash"):
-		if !dash_on_cooldown && available_dashes > 0:
-				aim_dir = new_aim_dir if new_aim_dir != Vector2.ZERO else aim_dir
-				start_dash()
-	elif can_redash && available_dashes > 0:
-		# Flick redash: stick moved from neutral while dash is held
-		if Input.is_action_pressed("Dash") && prev_aim_dir == Vector2.ZERO && new_aim_dir != Vector2.ZERO:
-			aim_dir = new_aim_dir
-			start_dash()
+func redash_window(delta):
+	redash_timer -= delta
+	if redash_timer <= 0:
+		end_dash()
+	velocity = Vector2.ZERO
 
-	prev_aim_dir = new_aim_dir
-	aim_dir = new_aim_dir if new_aim_dir != Vector2.ZERO else aim_dir
+func normal_movement(delta):
+	if dash_on_cooldown:
+		dash_cooldown_timer -= delta
+		if dash_cooldown_timer <= 0:
+			dash_on_cooldown = false
+			available_dashes = 3
+	movement(delta)
+
+func free_aim():
+	if is_on_floor():
+		velocity.x = 0
+	if aim_dir != Vector2.ZERO:
+		gun_offset = aim_dir.normalized()
+	else:
+		gun_offset = Vector2(facing_dir, 0)
+	
+	if aim_dir.x < 0:
+		facing_dir = -1
+	elif aim_dir.x > 0:
+		facing_dir = 1
+
+func move_gun(delta):
+	gun.position = gun.position.lerp(gun_offset * gun_hold_dist, gun_rot_speed * delta)
+	gun.look_at(position)
 
 func jump():
 	velocity.y = -jump_force
 
 func movement(delta):
+	# basic movement
 	if input_dir.x != 0:
 		velocity.x = input_dir.x * move_speed
 		if input_dir.x > 0:
@@ -92,26 +119,40 @@ func movement(delta):
 		else:
 			facing_dir = -1
 	else:
+		# friction
 		if is_on_floor():
 			velocity.x = 0
 		else:
 			velocity.x = move_toward(velocity.x, 0, friction * delta)
-			
+
 func start_dash():
+	locked = false
 	available_dashes -= 1
 	if aim_dir != Vector2.ZERO:
-		#velocity = aim_dir * dash_speed
 		position += aim_dir * dash_dist
 	else:
-		#velocity = Vector2(facing_dir * dash_speed, 0)
 		position += Vector2(facing_dir, 0) * dash_dist
 	start_dash_cooldown()
-	
+
 func start_dash_cooldown():
-	can_redash = true
-	redash_timer = redash_window_length
+	# redash logic
+	if available_dashes > 0:
+		can_redash = true
+		redash_timer = redash_window_length
+	else:
+		end_dash()
 
 func end_dash():
+	available_dashes = 3
 	can_redash = false
 	dash_on_cooldown = true
 	dash_cooldown_timer = dash_cooldown
+
+func move_cam(delta):
+	# move ahead according to player velocity
+	cam_offset = velocity * cam_offset_multiplier
+	# aiming
+	if locked:
+		cam_offset = gun_offset * gun_hold_dist * 2
+	# move camera
+	camera.global_position = camera.global_position.lerp(global_position + cam_offset, cam_follow_speed * delta)
