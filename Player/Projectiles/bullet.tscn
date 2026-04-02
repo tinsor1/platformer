@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://8a4fs7xre8ae"]
+
+[ext_resource type="Script" uid="uid://b8ddmjl6ah2qr" path="res://Player/Projectiles/bullet.gd" id="1_rbaos"]
+
+[node name="Bullet" type="Area2D" unique_id=10879237]
+script = ExtResource("1_rbaos")

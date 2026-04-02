@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://wkcam2kuolhf"]
 
-[ext_resource type="Script" uid="uid://dqj7yeah8iol6" path="res://player.gd" id="1_4flbx"]
+[ext_resource type="Script" uid="uid://dqj7yeah8iol6" path="res://Player/player.gd" id="1_4flbx"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_sh265"]
 size = Vector2(20, 30)

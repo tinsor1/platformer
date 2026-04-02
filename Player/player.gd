@@ -1,5 +1,11 @@
 extends CharacterBody2D
 
+@export_category("Upgrades")
+@export var dash: bool = true
+@export var dash_upgrade: bool = true
+@export var gun: bool = true
+@export var sword: bool = true
+
 @export_category("Input")
 @export var input_dir: Vector2 = Vector2.ZERO
 
@@ -10,7 +16,8 @@ extends CharacterBody2D
 @export var jump_force: float = 400.0
 
 @export_category("Dashing")
-var available_dashes: int = 3
+@export var dashes: int = 1
+var available_dashes: int = dashes
 @export var dash_dist: float = 100.0
 var can_redash: bool = false
 @export var redash_window_length: float = 0.5
@@ -25,7 +32,7 @@ var prev_aim_dir: Vector2 = Vector2.ZERO
 var aim_dir: Vector2 = Vector2.RIGHT
 @export var gun_rot_speed: float = 10.0
 @export var gun_hold_dist: Vector2 = Vector2(20, 30)
-@onready var gun: MeshInstance2D = $Gun
+@onready var gun_sprite: MeshInstance2D = $Gun
 var gun_offset: Vector2 = Vector2.ZERO
 
 # camera
@@ -38,10 +45,10 @@ func _physics_process(delta: float):
 	if !is_on_floor():
 		velocity += get_gravity() * delta
 	
+	upgrades()
 	gather_inputs()
 	move_cam(delta)
 	
-	# redash window
 	if can_redash:
 		redash_window(delta)
 	elif locked:
@@ -51,6 +58,12 @@ func _physics_process(delta: float):
 		
 	move_gun(delta)
 	move_and_slide()
+
+func upgrades():
+	if dash_upgrade:
+		dashes = 3
+	else:
+		dashes = 1
 
 func gather_inputs():
 	# basic movement
@@ -67,14 +80,21 @@ func gather_inputs():
 		Input.get_axis("Look Up", "Look Down")
 	).normalized()
 	# free aim
-	if Input.is_action_just_pressed("Aim"):
-		locked = true
-	if Input.is_action_just_released("Aim"):
-		locked = false
-		gun_offset = Vector2.ZERO
+	if gun:
+		if Input.is_action_just_pressed("Aim"):
+			locked = true
+		if Input.is_action_just_released("Aim"):
+			locked = false
+			gun_offset = Vector2.ZERO
 	# dashing
-	if Input.is_action_just_pressed("Dash") && !dash_on_cooldown:
+	if Input.is_action_just_pressed("Dash") && !dash_on_cooldown && dash:
 		start_dash()
+	# sword
+	if Input.is_action_just_pressed("Attack"):
+		if sword && !locked:
+			pass
+		if gun && locked:
+			shoot()
 
 func redash_window(delta):
 	redash_timer -= delta
@@ -87,7 +107,6 @@ func normal_movement(delta):
 		dash_cooldown_timer -= delta
 		if dash_cooldown_timer <= 0:
 			dash_on_cooldown = false
-			available_dashes = 3
 	movement(delta)
 
 func free_aim():
@@ -104,8 +123,8 @@ func free_aim():
 		facing_dir = 1
 
 func move_gun(delta):
-	gun.position = gun.position.lerp(gun_offset * gun_hold_dist, gun_rot_speed * delta)
-	gun.look_at(position)
+	gun_sprite.position = gun_sprite.position.lerp(gun_offset * gun_hold_dist, gun_rot_speed * delta)
+	gun_sprite.look_at(position)
 
 func jump():
 	velocity.y = -jump_force
@@ -143,10 +162,13 @@ func start_dash_cooldown():
 		end_dash()
 
 func end_dash():
-	available_dashes = 3
+	available_dashes = dashes
 	can_redash = false
 	dash_on_cooldown = true
 	dash_cooldown_timer = dash_cooldown
+
+func shoot():
+	pass
 
 func move_cam(delta):
 	# move ahead according to player velocity
